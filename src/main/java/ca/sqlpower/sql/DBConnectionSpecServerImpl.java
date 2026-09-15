@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.rmi.Naming;
-import java.rmi.RMISecurityManager;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Collection;
@@ -73,10 +72,8 @@ public class DBConnectionSpecServerImpl
 	 */
 	public static void main(String args[]) throws RemoteException{
 
-		// Create and install a security manager
-		if (System.getSecurityManager() == null) {
-			System.setSecurityManager(new RMISecurityManager());
-		}
+		// RMI no longer requires (or allows) installing a SecurityManager on
+		// modern JDKs; the runtime enforces its own codebase-based protection.
 
 		DBConnectionSpecServerImpl obj =
 				new DBConnectionSpecServerImpl();

@@ -1,0 +1,186 @@
+plugins {
+    id 'java-library'
+}
+
+group = 'ca.sqlpower'
+version = '1.0.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Vendored dependencies (lib/main/*.jar)
+//
+// These libraries were historically checked in and are NOT resolved from a
+// repository. Modernizing them all to Maven coordinates is tracked separately;
+// per the project's fallback principle, we keep them vendored so the build
+// stays reproducible and the app keeps all of its existing features.
+// ---------------------------------------------------------------------------
+def vendoredMain = files(fileTree(dir: 'lib/main', include: '*.jar'))
+
+def mainClassesDir = layout.buildDirectory.dir('classes/java/main')
+def aptClassesDir = layout.buildDirectory.dir('classes/apt')
+def generatedSrcDir = layout.buildDirectory.dir('generated-src')
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src/main/java']
+        }
+        resources {
+            srcDirs = ['src/main/resources']
+        }
+        compileClasspath += vendoredMain
+    }
+    // Annotation processor source set: compiled separately, packaged as the
+    // -apt artifact, and used to generate sources for the main source set.
+    // Uses the main classes dir directly (not sourceSets.main.output) to avoid
+    // a circular dependency with the aggregated "classes" task.
+    apt {
+        java {
+            srcDirs = ['src/apt/java']
+        }
+        compileClasspath += vendoredMain
+        compileClasspath += files(mainClassesDir)
+    }
+    // Sources produced by the annotation processor, compiled into their own
+    // class output and merged into the core jar.
+    generated {
+        java {
+            srcDirs = [generatedSrcDir]
+        }
+        compileClasspath += vendoredMain
+        compileClasspath += files(mainClassesDir)
+    }
+    test {
+        java {
+            srcDirs = ['src/test/java']
+        }
+        resources {
+            srcDirs = ['src/test/resources']
+        }
+        compileClasspath += sourceSets.main.output
+        compileClasspath += sourceSets.generated.output
+        compileClasspath += vendoredMain
+        runtimeClasspath += sourceSets.generated.output
+        runtimeClasspath += vendoredMain
+    }
+}
+
+dependencies {
+    // jakarta.mail replaces the vendored mail-1.4.1.jar (javax.mail) - same API, new package.
+    implementation 'com.sun.mail:jakarta.mail:2.0.1'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+    testRuntimeOnly 'org.junit.vintage:junit-vintage-engine:5.10.2'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+// ---------------------------------------------------------------------------
+// Two-pass annotation processing, mirroring the historical Ant build:
+//   1. compile main sources WITHOUT the annotation processor
+//   2. compile the processor itself (apt source set)
+//   3. run -proc:only with SPAnnotationProcessor over main sources -> generated-src
+//   4. compile generated-src via the "generated" source set
+// ---------------------------------------------------------------------------
+tasks.register('compileApt', JavaCompile) {
+    dependsOn compileJava
+    source = sourceSets.apt.java
+    classpath = sourceSets.apt.compileClasspath
+    destinationDirectory = aptClassesDir
+    options.debug = true
+}
+
+tasks.register('runAnnotationProcessor', JavaCompile) {
+    dependsOn compileApt
+    source = sourceSets.main.java
+    classpath = files(
+        mainClassesDir,
+        sourceSets.main.compileClasspath
+    )
+    destinationDirectory = layout.buildDirectory.dir('tmp/proc-only')
+    options.debug = true
+    options.annotationProcessorPath = files(aptClassesDir, mainClassesDir, vendoredMain)
+    options.compilerArgs.addAll([
+        '-proc:only',
+        '-processor', 'ca.sqlpower.object.annotation.SPAnnotationProcessor',
+        '-s', generatedSrcDir.get().asFile.absolutePath
+    ])
+    doFirst {
+        generatedSrcDir.get().asFile.mkdirs()
+    }
+}
+
+tasks.named('compileGeneratedJava') {
+    dependsOn runAnnotationProcessor
+}
+
+tasks.named('compileJava') {
+    // Disable the default annotation processor pass; generation is handled by
+    // runAnnotationProcessor to match the historical -proc:only flow.
+    options.compilerArgs += ['-proc:none']
+}
+
+// ---------------------------------------------------------------------------
+// Artifacts: core, tests, apt (mirrors the historical Ant jar target)
+//
+// The standard "jar" task is also wired to include generated classes so that
+// consuming projects can simply use `implementation project(':sqlpower-library')`.
+// ---------------------------------------------------------------------------
+tasks.named('jar') {
+    from sourceSets.generated.output
+    dependsOn tasks.named('compileGeneratedJava')
+}
+
+tasks.register('coreJar', Jar) {
+    archiveFileName = 'sqlpower_library.jar'
+    from sourceSets.main.output
+    from sourceSets.generated.output
+    dependsOn compileJava
+    dependsOn tasks.named('compileGeneratedJava')
+}
+
+tasks.register('testJar', Jar) {
+    archiveFileName = 'sqlpower_library-tests.jar'
+    from sourceSets.test.output
+    dependsOn testClasses
+}
+
+tasks.register('aptJar', Jar) {
+    archiveFileName = 'sqlpower_library-apt.jar'
+    from aptClassesDir
+    dependsOn compileApt
+}
+
+tasks.named('jar') {
+    dependsOn coreJar, testJar, aptJar
+}
+
+test {
+    useJUnitPlatform()
+    maxHeapSize = '1024m'
+    systemProperty 'ca.sqlpower.architect.test.dir', "${buildDir}/classes/java/test"
+    systemProperty 'ca.sqlpower.SKIP_DODGY_TESTS', System.getProperty('ca.sqlpower.SKIP_DODGY_TESTS', '')
+    systemProperty 'java.util.prefs.PreferencesFactory', 'prefs.PreferencesFactory'
+    // Deterministic locale so locale-sensitive renderer tests pass on any machine.
+    systemProperty 'user.language', 'en'
+    systemProperty 'user.country', 'US'
+    // Abstract / non-JUnit classes are excluded just like the historical Ant
+    // batchtest excludes.
+    exclude '**/PersisterTest*'
+    exclude '**/BaseSQLObjectTestCase*'
+    exclude '**/DatabaseConnectedTestCase*'
+    exclude '**/TestingSQLObjectListener*'
+    exclude '**/PersistedSPObjectTest*'
+    exclude '**/BaseRendererTest*'
+    exclude '**/CacheTest*'
+    exclude '**/ZealousURLEncoderTest*'
+    exclude '**/TestingReservoirDataSource*'
+}

@@ -27,11 +27,6 @@ import java.io.InputStream;
 import java.net.JarURLConnection;
 import java.net.URI;
 import java.net.URL;
-import java.security.AllPermission;
-import java.security.CodeSource;
-import java.security.PermissionCollection;
-import java.security.Permissions;
-import java.security.Policy;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -156,22 +151,6 @@ public class JDBCDataSourceType {
         	}
         	
             logger.debug("Created new JDBC Classloader @"+System.identityHashCode(this));
-            
-            // classes loaded with this classloader need their own security policy,
-            // because in WebStart, the allPermissions tag applies only to the
-            // webstart classloader.
-            // I found this code in a comment on the big ranch java saloon. It works!
-            Policy.setPolicy( new Policy() {
-                    public PermissionCollection
-                        getPermissions(CodeSource codesource) {
-                        Permissions perms = new Permissions();
-                        perms.add(new AllPermission());
-                        return(perms);
-                    }
-                    public void refresh(){
-                        // no need to refresh
-                    }
-                });
         }
         
         /**

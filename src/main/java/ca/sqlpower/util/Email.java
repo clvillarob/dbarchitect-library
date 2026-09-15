@@ -5,12 +5,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import javax.mail.Session;
-import javax.mail.Transport;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
+import jakarta.mail.Message;
+import jakarta.mail.MessagingException;
+import jakarta.mail.Session;
+import jakarta.mail.Transport;
+import jakarta.mail.internet.InternetAddress;
+import jakarta.mail.internet.MimeMessage;
 
 import ca.sqlpower.security.EmailNotification.EmailRecipient;
 
@@ -62,7 +62,7 @@ public class Email {
      * Sends this email using the current settings.  All settings are required,
      * so don't go skimping on setXXX() calls before calling this!
      * 
-     * @throws javax.mail.MessagingException if the message could not
+     * @throws jakarta.mail.MessagingException if the message could not
      * be sent.  this is an unusual condition for the website and
      * probably means that the mail server is down or something.
      * @throws UnsupportedEncodingException 

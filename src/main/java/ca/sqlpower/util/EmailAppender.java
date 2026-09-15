@@ -24,7 +24,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.log4j.AppenderSkeleton;
 import org.apache.log4j.Level;
