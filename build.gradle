@@ -37,7 +37,12 @@ sourceSets {
         resources {
             srcDirs = ['src/main/resources']
         }
-        compileClasspath += vendoredMain
+        // Assign the compile classpath explicitly (resolved configurations plus
+        // the vendored jars). Relying on the default source-set classpath was
+        // flaky: it sometimes resolved before the dependencies block evaluated,
+        // so the Maven deps (guava, jsr305, ...) were missing and javac silently
+        // produced "Unresolved compilation problems" class files.
+        compileClasspath = files(configurations.compileClasspath, vendoredMain)
     }
     // Annotation processor source set: compiled separately, packaged as the
     // -apt artifact, and used to generate sources for the main source set.
@@ -47,9 +52,7 @@ sourceSets {
         java {
             srcDirs = ['src/apt/java']
         }
-        compileClasspath += vendoredMain
-        compileClasspath += files(mainClassesDir)
-        compileClasspath += sourceSets.main.compileClasspath
+        compileClasspath = files(configurations.compileClasspath, vendoredMain, files(mainClassesDir))
     }
     // Sources produced by the annotation processor, compiled into their own
     // class output and merged into the core jar.
@@ -57,9 +60,7 @@ sourceSets {
         java {
             srcDirs = [generatedSrcDir]
         }
-        compileClasspath += vendoredMain
-        compileClasspath += files(mainClassesDir)
-        compileClasspath += sourceSets.main.compileClasspath
+        compileClasspath = files(configurations.compileClasspath, vendoredMain, files(mainClassesDir))
     }
     test {
         java {
@@ -107,7 +108,7 @@ dependencies {
 tasks.register('compileApt', JavaCompile) {
     dependsOn compileJava
     source = sourceSets.apt.java
-    classpath = sourceSets.apt.compileClasspath
+    classpath = files(configurations.compileClasspath, vendoredMain, files(mainClassesDir))
     destinationDirectory = aptClassesDir
     options.debug = true
 }
@@ -121,7 +122,7 @@ tasks.register('runAnnotationProcessor', JavaCompile) {
     )
     destinationDirectory = layout.buildDirectory.dir('tmp/proc-only')
     options.debug = true
-    options.annotationProcessorPath = files(aptClassesDir, mainClassesDir, vendoredMain, sourceSets.main.compileClasspath)
+    options.annotationProcessorPath = files(aptClassesDir, mainClassesDir, vendoredMain, configurations.compileClasspath)
     options.compilerArgs.addAll([
         '-proc:only',
         '-processor', 'ca.sqlpower.object.annotation.SPAnnotationProcessor',
@@ -134,6 +135,11 @@ tasks.register('runAnnotationProcessor', JavaCompile) {
 
 tasks.named('compileGeneratedJava') {
     dependsOn runAnnotationProcessor
+    // Force an explicit, fully-resolved classpath and a clean output dir.
+    classpath = files(configurations.compileClasspath, vendoredMain, files(mainClassesDir))
+    doFirst {
+        delete layout.buildDirectory.dir('classes/java/generated').get().asFile
+    }
 }
 
 tasks.named('compileJava') {
