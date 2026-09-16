@@ -19,20 +19,26 @@
 
 package ca.sqlpower.swingui;
 
+import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.FocusListener;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextField;
 import javax.swing.JTree;
 import javax.swing.Popup;
 import javax.swing.SwingUtilities;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.TreeNode;
@@ -71,6 +77,17 @@ public class PopupJTreeAction extends AbstractAction {
      * The {@link PopupListenerHandler}
      */
     private PopupListenerHandler popupListenerHandler;
+
+    /**
+     * When true, the popup shows a search field above the tree that scrolls to
+     * (and selects) the first node whose label contains the typed text.
+     */
+    private boolean withSearch;
+
+    /**
+     * The search field, when {@link #withSearch} is enabled.
+     */
+    private JTextField searchField;
 
 	/**
 	 * This {@link TreeSelectionListener} determines if a tree selection is
@@ -135,11 +152,39 @@ public class PopupJTreeAction extends AbstractAction {
 	 *            {@link List}, no selections are allowed.
 	 */
     public PopupJTreeAction(JPanel panel, JTree tree, JButton button, List<Class<?>> validSelectionClasses) {
+        this(panel, tree, button, validSelectionClasses, false);
+    }
+
+	/**
+	 * Creates a new {@link PopupJTreeAction} with a single valid selection
+	 * class, optionally with a search field.
+	 */
+    public PopupJTreeAction(JPanel panel, JTree tree, JButton button,
+            Class<?> validSelectionClass, boolean withSearch) {
+        this(panel, tree, button,
+                (validSelectionClass == null)
+                        ? Collections.<Class<?>>emptyList()
+                        : Collections.<Class<?>>singletonList(validSelectionClass),
+                withSearch);
+    }
+
+	/**
+	 * Creates a new {@link PopupJTreeAction} as
+	 * {@link #PopupJTreeAction(JPanel, JTree, JButton, List)}, optionally with a
+	 * search field above the tree.
+	 *
+	 * @param withSearch
+	 *            if true, the popup embeds a search field that scrolls to and
+	 *            selects the first node whose label contains the typed text.
+	 */
+    public PopupJTreeAction(JPanel panel, JTree tree, JButton button,
+            List<Class<?>> validSelectionClasses, boolean withSearch) {
         super();
         this.panel = panel;
         this.tree = tree;
         this.button = button;
         this.validSelectionClasses = Collections.unmodifiableList(new ArrayList<Class<?>>(validSelectionClasses));
+        this.withSearch = withSearch;
     }
 
     /**
@@ -156,10 +201,55 @@ public class PopupJTreeAction extends AbstractAction {
             windowLocation.y += button.getHeight();
            // tree.setMinimumSize(new Dimension(panel.getWidth(), tree.getHeight()));
             // Popup the JTree and attach the popup listener handler to the tree
+            JComponent popupContent = withSearch ? buildSearchableContent() : tree;
             popupListenerHandler = 
-                SPSUtils.popupComponent(panel, tree, windowLocation,true);
+                SPSUtils.popupComponent(panel, popupContent, windowLocation,true);
+            if (searchField != null) {
+                searchField.requestFocusInWindow();
+            }
             popupConnect();
         }
+    }
+
+    /**
+     * Builds a panel with a search field above the tree. Typing scrolls to and
+     * selects the first node whose label contains the text.
+     */
+    private JPanel buildSearchableContent() {
+        JPanel wrapper = new JPanel(new BorderLayout(0, 2));
+        searchField = new JTextField();
+        wrapper.add(searchField, BorderLayout.NORTH);
+        wrapper.add(new JScrollPane(tree), BorderLayout.CENTER);
+        searchField.getDocument().addDocumentListener(new DocumentListener() {
+            public void insertUpdate(DocumentEvent e) { searchTree(); }
+            public void removeUpdate(DocumentEvent e) { searchTree(); }
+            public void changedUpdate(DocumentEvent e) { searchTree(); }
+        });
+        return wrapper;
+    }
+
+    private void searchTree() {
+        if (searchField == null) return;
+        String needle = searchField.getText();
+        if (needle == null || needle.trim().isEmpty()) return;
+        TreeNode root = (TreeNode) tree.getModel().getRoot();
+        TreePath match = findMatch(root, new TreePath(root), needle.trim().toLowerCase());
+        if (match != null) {
+            tree.setSelectionPath(match);
+            tree.scrollPathToVisible(match);
+        }
+    }
+
+    private TreePath findMatch(TreeNode node, TreePath path, String needle) {
+        if (node.toString().toLowerCase().contains(needle)) {
+            return path;
+        }
+        for (int i = 0; i < node.getChildCount(); i++) {
+            TreeNode child = node.getChildAt(i);
+            TreePath match = findMatch(child, path.pathByAddingChild(child), needle);
+            if (match != null) return match;
+        }
+        return null;
     }
 
 	/**
