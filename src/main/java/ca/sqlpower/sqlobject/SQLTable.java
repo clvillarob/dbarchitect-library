@@ -78,6 +78,12 @@ public class SQLTable extends SQLObject {
 	private String objectType;
 
 	/**
+	 * Free-form notes the user wants appended to this table's generated DDL as
+	 * SQL comments. Persisted with the model.
+	 */
+	private String ddlNotes = "";
+
+	/**
 	 * A List of SQLColumn objects which make up all the columns of
 	 * this table.
 	 */
@@ -1550,6 +1556,30 @@ public class SQLTable extends SQLObject {
 		String oldRemarks = this.remarks;
 		this.remarks = argRemarks;
 		firePropertyChange("remarks",oldRemarks,argRemarks);
+	}
+
+	/**
+	 * Gets the free-form notes that are appended to this table's generated DDL
+	 * as SQL comments.
+	 *
+	 * @return the value of ddlNotes
+	 */
+	@Accessor(isInteresting=true)
+	public String getDdlNotes()  {
+		return this.ddlNotes;
+	}
+
+	/**
+	 * Sets the free-form notes that are appended to this table's generated DDL
+	 * as SQL comments.
+	 *
+	 * @param argDdlNotes Value to assign to this.ddlNotes
+	 */
+	@Mutator
+	public void setDdlNotes(String argDdlNotes) {
+		String oldDdlNotes = this.ddlNotes;
+		this.ddlNotes = argDdlNotes == null ? "" : argDdlNotes;
+		firePropertyChange("ddlNotes", oldDdlNotes, argDdlNotes);
 	}
 
 	/**
