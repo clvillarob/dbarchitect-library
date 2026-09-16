@@ -153,6 +153,18 @@ tasks.register('testJar', Jar) {
     dependsOn testClasses
 }
 
+// Exposes the library's test classes (PersistedSPObjectTest,
+// DatabaseConnectedTestCase, AllPrefsTests, etc.) to consuming projects.
+configurations {
+    testClasses {
+        canBeResolved = false
+        canBeConsumed = true
+    }
+}
+artifacts {
+    testClasses(testJar)
+}
+
 tasks.register('aptJar', Jar) {
     archiveFileName = 'sqlpower_library-apt.jar'
     from aptClassesDir

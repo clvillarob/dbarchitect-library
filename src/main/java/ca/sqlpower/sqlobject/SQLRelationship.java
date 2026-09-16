@@ -80,6 +80,7 @@ public class SQLRelationship extends SQLObject implements java.io.Serializable {
     
     private List<ColumnMapping> mappings = new ArrayList<ColumnMapping>();
     
+    @Transient @Accessor
     public List<ColumnMapping> getMappings() {
 		return mappings;
 	}

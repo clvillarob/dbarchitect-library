@@ -3,4 +3,4 @@
 /build_tests/
 /build_apt/
 /build/
-/generated/
+/generated//.gradle/
