@@ -32,7 +32,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
-import org.springframework.security.AccessDeniedException;
 
 import ca.sqlpower.dao.FriendlyRuntimeSPPersistenceException;
 import ca.sqlpower.dao.FriendlySPPersistenceException;

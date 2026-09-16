@@ -247,13 +247,13 @@ public class TestSQLColumn extends BaseSQLObjectTestCase {
 		assertEquals(origCol, derivCol.getSourceColumn());
 		assertEquals("NUMERIC", derivCol.getSourceDataTypeName());
         
-        Map<String,Object> origProps = (Map<String,Object>) BeanUtils.describe(origCol);
-        Map<String,Object> derivProps = (Map<String,Object>) BeanUtils.describe(derivCol);
+        Map<String,String> origProps = (Map<String,String>) BeanUtils.describe(origCol);
+        Map<String,String> derivProps = (Map<String,String>) BeanUtils.describe(derivCol);
         
         origProps.keySet().removeAll(propsToIgnore);
         derivProps.keySet().removeAll(propsToIgnore);
         
-        for (Map.Entry<String, Object> property : origProps.entrySet()) {
+        for (Map.Entry<String, String> property : origProps.entrySet()) {
 			assertEquals("Property \"" + property.getKey() + "\" differs", property.getValue(), derivProps.get(property.getKey()));
 		}
 	}
@@ -606,13 +606,13 @@ public class TestSQLColumn extends BaseSQLObjectTestCase {
         propsToIgnore.add("userDefinedSQLType");
         propsToIgnore.add("variableResolver");
         
-		Map<String,Object> origProps = (Map<String,Object>) BeanUtils.describe(cowCol);
-		Map<String,Object> derivProps = (Map<String,Object>) BeanUtils.describe(tmpCol);
+		Map<String,String> origProps = (Map<String,String>) BeanUtils.describe(cowCol);
+		Map<String,String> derivProps = (Map<String,String>) BeanUtils.describe(tmpCol);
 		
 		origProps.keySet().removeAll(propsToIgnore);
 		derivProps.keySet().removeAll(propsToIgnore);
 
-		for (Map.Entry<String, Object> property : origProps.entrySet()) {
+		for (Map.Entry<String, String> property : origProps.entrySet()) {
 			assertEquals("Property \"" + property.getKey() + "\" differs", property.getValue(), derivProps.get(property.getKey()));
 		}
 	}

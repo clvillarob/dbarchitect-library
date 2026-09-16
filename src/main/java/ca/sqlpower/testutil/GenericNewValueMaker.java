@@ -384,7 +384,7 @@ public class GenericNewValueMaker implements NewValueMaker {
             newVal = r;
         } else if (valueType == Color.class) {
             Color rgb = new Color(33, 66, 99);
-            if (rgb.getRGB() == ((Color) oldVal).getRGB()) {
+            if (oldVal != null && rgb.getRGB() == ((Color) oldVal).getRGB()) {
                 rgb = rgb.brighter();
             }
             newVal = rgb;

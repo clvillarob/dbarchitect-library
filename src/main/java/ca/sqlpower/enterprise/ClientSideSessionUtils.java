@@ -47,7 +47,6 @@ import org.apache.http.params.HttpParams;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.springframework.security.AccessDeniedException;
 
 import ca.sqlpower.dao.SPPersistenceException;
 import ca.sqlpower.dao.json.SPJSONMessageDecoder;
