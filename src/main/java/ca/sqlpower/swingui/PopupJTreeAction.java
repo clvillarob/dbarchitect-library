@@ -41,7 +41,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
-import javax.swing.tree.TreeNode;
+import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 
 /**
@@ -232,21 +232,36 @@ public class PopupJTreeAction extends AbstractAction {
         if (searchField == null) return;
         String needle = searchField.getText();
         if (needle == null || needle.trim().isEmpty()) return;
-        TreeNode root = (TreeNode) tree.getModel().getRoot();
-        TreePath match = findMatch(root, new TreePath(root), needle.trim().toLowerCase());
+        TreeModel model = tree.getModel();
+        Object root = model.getRoot();
+        TreePath match = findMatch(model, root, new TreePath(root), needle.trim().toLowerCase());
         if (match != null) {
             tree.setSelectionPath(match);
             tree.scrollPathToVisible(match);
         }
     }
 
-    private TreePath findMatch(TreeNode node, TreePath path, String needle) {
-        if (node.toString().toLowerCase().contains(needle)) {
+    /**
+     * Recursively searches the given {@link TreeModel} (starting at
+     * {@code node}) for the first node whose {@code toString()} contains the
+     * given needle. Uses the {@link TreeModel} API so it works with any tree
+     * model, regardless of the root's type (it must not be assumed to be a
+     * {@link TreeNode}).
+     *
+     * @param model the tree model to search
+     * @param node the node to check (and whose subtree to search)
+     * @param path the {@link TreePath} to {@code node}
+     * @param needle the lower-cased text to search for
+     * @return the first matching {@link TreePath}, or null if none matches
+     */
+    static TreePath findMatch(TreeModel model, Object node, TreePath path, String needle) {
+        if (node != null && node.toString().toLowerCase().contains(needle)) {
             return path;
         }
-        for (int i = 0; i < node.getChildCount(); i++) {
-            TreeNode child = node.getChildAt(i);
-            TreePath match = findMatch(child, path.pathByAddingChild(child), needle);
+        int childCount = model.getChildCount(node);
+        for (int i = 0; i < childCount; i++) {
+            Object child = model.getChild(node, i);
+            TreePath match = findMatch(model, child, path.pathByAddingChild(child), needle);
             if (match != null) return match;
         }
         return null;
