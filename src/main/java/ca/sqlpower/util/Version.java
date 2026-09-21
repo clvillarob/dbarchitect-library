@@ -46,17 +46,32 @@ public class Version implements Comparable<Version> {
      * part, it will be the last part, and is referred to as the "Suffix."
      */
     private Object[] parts;
-    
+
+    /**
+     * The "V"/"v" release-tag prefix, if the version string had one. Stored so
+     * {@link #toString()} round-trips (e.g. "V1.9.0"). Ignored for comparison.
+     */
+    private final String prefix;
+
     /**
      * Creates a new Version object from the given string. The format is
      * <tt>a1.a2.(...).aN[suffix]</tt>.  Examples: <tt>1.2.3alpha</tt>
      * or <tt>1.3</tt> or <tt>2</tt>.  The version number must have at
      * least one numeric component, so <tt>1suffix</tt> is legal but
      * <tt>suffix</tt> on its own is not.
+     * <p>
+     * A leading "V" or "v" (e.g. "V1.9.0", matching the Power*Architect
+     * release-tag convention) is accepted and preserved in {@link #toString()},
+     * but is stripped before parsing so it never affects comparison.
      * 
      * @param v The version string, cannot be null.
      */
     public Version(@Nonnull String v) {
+        this.prefix = (v.length() > 0 && (v.charAt(0) == 'V' || v.charAt(0) == 'v'))
+                ? "V" : ""; //$NON-NLS-1$ //$NON-NLS-2$
+        if (prefix.length() > 0) {
+            v = v.substring(1);
+        }
         String[] rawParts = v.split("\\.");
         List<Object> parsedParts = new ArrayList<Object>();
         Pattern p = Pattern.compile("[0-9]+");
@@ -95,6 +110,7 @@ public class Version implements Comparable<Version> {
      *            {@link IndexOutOfBoundsException} will be thrown.
      */
     public Version(Version copyMe, int numPartsToCopy) {
+        this.prefix = copyMe.prefix;
         Object[] newVersionParts = new Object[numPartsToCopy];
         Object[] oldVersions = copyMe.getParts();
         for (int i = 0; i < numPartsToCopy; i++) {
@@ -105,11 +121,12 @@ public class Version implements Comparable<Version> {
     
     /**
      * Returns the String representation of this version number in the same format
-     * accepted by the {@link #Version(String)} constructor.
+     * accepted by the {@link #Version(String)} constructor (including a "V"
+     * prefix if the version had one).
      */
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = new StringBuilder(prefix);
         boolean first = true;
         for (Object part : parts) {
             if (!first && part instanceof Integer) {
