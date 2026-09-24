@@ -20,6 +20,7 @@
 package ca.sqlpower.swingui;
 
 import java.awt.Polygon;
+import java.io.File;
 
 import javax.swing.JDialog;
 import javax.swing.JFrame;
@@ -28,6 +29,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
+import javax.swing.filechooser.FileFilter;
 
 import junit.framework.TestCase;
 
@@ -118,5 +120,12 @@ public class SPSUtilsTest extends TestCase {
         assertSame("The last item wasn't a submenu!",
                 JMenu.class, fileMenu.getItem(fileMenu.getItemCount() - 1).getClass());
         
+    }
+
+    public void testArchitectFileFilterAcceptsDba() {
+        FileFilter f = SPSUtils.ARCHITECT_FILE_FILTER;
+        assertTrue("must accept .dba files", f.accept(new File("proj.dba")));
+        assertTrue("must accept .arc files", f.accept(new File("proj.arc")));
+        assertTrue("must accept .architect files", f.accept(new File("proj.architect")));
     }
 }

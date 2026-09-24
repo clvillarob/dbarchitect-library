@@ -416,7 +416,7 @@ public class SPSUtils {
 	}
     
 	public static final FileFilter ARCHITECT_FILE_FILTER =
-		new FileExtensionFilter(Messages.getString("SPSUtils.architectFileType"), new String[] {"arc", "architect"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		new FileExtensionFilter(Messages.getString("SPSUtils.architectFileType"), new String[] {"arc", "architect", "dba"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
 	public static final FileFilter TEXT_FILE_FILTER =
 		new FileExtensionFilter(Messages.getString("SPSUtils.textFileType"), new String[] {"txt"}); //$NON-NLS-1$ //$NON-NLS-2$
