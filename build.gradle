@@ -152,7 +152,7 @@ tasks.named('compileJava') {
 // Artifacts: core, tests, apt (mirrors the historical Ant jar target)
 //
 // The standard "jar" task is also wired to include generated classes so that
-// consuming projects can simply use `implementation project(':sqlpower-library')`.
+// consuming projects can simply use `implementation project(':dbarquitect-library')`.
 // ---------------------------------------------------------------------------
 tasks.named('jar') {
     from sourceSets.generated.output
