@@ -1,14 +1,17 @@
 /*
- * Copyright (c) 2026, SQL Power Group Inc.
+ * This file is part of DBArchitect.
  *
- * This file is part of SQL Power Library.
+ * Copyright (c) 2026 villasoft (villasoft.cl@gmail.com)
  *
- * SQL Power Library is free software; you can redistribute it and/or modify
+ * DBArchitect is a fork of Power*Architect, originally developed and
+ * copyrighted by SQL Power Group Inc. (Copyright (c) 2008-2010).
+ *
+ * DBArchitect is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
- * SQL Power Library is distributed in the hope that it will be useful,
+ * DBArchitect is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.

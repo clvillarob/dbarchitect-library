@@ -1,20 +1,23 @@
 /*
- * Copyright (c) 2008, SQL Power Group Inc.
+ * This file is part of DBArchitect.
  *
- * This file is part of Power*Architect.
+ * Copyright (c) 2026 villasoft (villasoft.cl@gmail.com)
  *
- * Power*Architect is free software; you can redistribute it and/or modify
+ * DBArchitect is a fork of Power*Architect, originally developed and
+ * copyrighted by SQL Power Group Inc. (Copyright (c) 2008-2010).
+ *
+ * DBArchitect is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
- * Power*Architect is distributed in the hope that it will be useful,
+ * DBArchitect is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>. 
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package ca.sqlpower.swingui;
 
@@ -79,8 +82,6 @@ public class AboutPanel extends AbstractNoEditDataEntryPanel {
         add(tabs);
 	}
 	
-	private static final JLabel sqlpLabel = new JLabel(new ImageIcon(AboutPanel.class.getClassLoader().getResource("ca/sqlpower/swingui/SQLP-90x80.png")));
-
     private JComponent initAboutTab(ImageIcon icon, String productName, String versionPropertiesPath, String defaultAppVersion) {
         JPanel panel = new JPanel();
 		panel.setLayout(new FlowLayout());
@@ -90,7 +91,6 @@ public class AboutPanel extends AbstractNoEditDataEntryPanel {
 		if (icon != null) {
 			JPanel logoPanel = new JPanel(new MigLayout("", "[center]"));
 			logoPanel.add(new JLabel(icon), "wrap, gapbottom 50");
-			logoPanel.add(sqlpLabel);
 			panel.add(logoPanel);
 		}
 
@@ -135,6 +135,7 @@ public class AboutPanel extends AbstractNoEditDataEntryPanel {
 		String freeMemoryMiB = String.valueOf(Runtime.getRuntime().freeMemory() / MEBIBYTE);
         String versionInfo = productName + " " + productVersion + "\n" + //$NON-NLS-1$ //$NON-NLS-2$
 		    Messages.getString("AboutPanel.copyright") + "\n" + //$NON-NLS-1$ //$NON-NLS-2$
+		    Messages.getString("AboutPanel.credits") + "\n" + //$NON-NLS-1$ //$NON-NLS-2$
 		    "\n" + //$NON-NLS-1$
 		    Messages.getString("AboutPanel.operatingSystem") + "\n" + //$NON-NLS-1$ //$NON-NLS-2$
 		    System.getProperty("os.name") + " " + System.getProperty("os.version") + " (" + System.getProperty("os.arch") + ")\n" + //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
