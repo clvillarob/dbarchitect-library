@@ -657,6 +657,11 @@ public class SQLQueryUIComponents {
      * The text area users can enter SQL queries to get data from the database.
      */
     private final RSyntaxTextArea queryArea;
+
+    /**
+     * Installed model-aware SQL completion controller, or null if not installed.
+     */
+    private SqlCompletionController completionController;
     
     /**
      * A combo box of available connections the user have specified. The selected
@@ -1475,14 +1480,47 @@ public class SQLQueryUIComponents {
 	 *            null for the query to be executed. If the data source is null
 	 *            then the query will not be executed.
 	 * 
-	 * @param initialSQL
-	 *            The string that will be executed immediately when the query
-	 *            tool is shown. If this is null then no query will be executed.
-	 */
+* @param initialSQL
+     *            The string that will be executed immediately when the query
+     *            tool is shown. If this is null then no query will be executed.
+     */
     public static JComponent createQueryPanel(SwingWorkerRegistry swRegistry, DataSourceCollection dsCollection, SQLDatabaseMapping mapping, Window owner, SQLDatabase db, String initialSQL) {
+        return createQueryPanel(swRegistry, dsCollection, mapping, owner, db, initialSQL, null);
+    }
+
+    /**
+     * Builds the UI of the {@link SQLQueryUIComponents}, offering model-aware
+     * SQL completion on the editor when a provider is supplied.
+     *
+     * @param swRegistry
+     *            The registry with which all background tasks will be
+     *            registered. This argument must not be null.
+     * @param dsCollection
+     *            The collection of data sources that will be available for
+     *            querying from the UI. This argument must not be null.
+     * @param mapping
+     *            The mapping used to look up databases. This argument must not
+     *            be null.
+     * @param owner
+     *            The window that will be the ancestor of this panel; receives
+     *            window events so connections can be cleaned up when it closes.
+     * @param db
+     *            The data source that the initial query will be executed on.
+     *            This data source must be contained in the dsCollection and not
+     *            null for the query to be executed. If the data source is null
+     *            then the query will not be executed.
+     * @param initialSQL
+     *            The string that will be executed immediately when the query
+     *            tool is shown. If this is null then no query will be executed.
+     * @param completionProvider
+     *            Supplies completion candidates from the project model, or null
+     *            to leave the editor without autocompletion.
+     */
+    public static JComponent createQueryPanel(SwingWorkerRegistry swRegistry, DataSourceCollection dsCollection, SQLDatabaseMapping mapping, Window owner, SQLDatabase db, String initialSQL, SqlCompletionProvider completionProvider) {
         
         JPanel defaultQueryPanel = new JPanel();
         SQLQueryUIComponents queryParts = new SQLQueryUIComponents(swRegistry, dsCollection, mapping, defaultQueryPanel);
+        queryParts.installSqlCompletionProvider(completionProvider);
         queryParts.addWindowListener(owner);
         JToolBar toolbar = new JToolBar();
         toolbar.setFloatable(false);
@@ -1743,6 +1781,17 @@ public class SQLQueryUIComponents {
 
     public RSyntaxTextArea getQueryArea() {
     	return queryArea;
+    }
+
+    /**
+     * Installs model-aware completion on the SQL editor. This is idempotent:
+     * a second call with a provider does nothing, and a null provider is ignored.
+     *
+     * @param provider the completion provider, or null to leave the editor unchanged
+     */
+    public void installSqlCompletionProvider(SqlCompletionProvider provider) {
+        if (completionController != null || provider == null) return;
+        completionController = new SqlCompletionController(queryArea, provider);
     }
 
     public JTabbedPane getResultTabPane(){
