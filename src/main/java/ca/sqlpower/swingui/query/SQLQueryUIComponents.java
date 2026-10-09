@@ -1517,26 +1517,43 @@ public class SQLQueryUIComponents {
      *            to leave the editor without autocompletion.
      */
     public static JComponent createQueryPanel(SwingWorkerRegistry swRegistry, DataSourceCollection dsCollection, SQLDatabaseMapping mapping, Window owner, SQLDatabase db, String initialSQL, SqlCompletionProvider completionProvider) {
-        
-        JPanel defaultQueryPanel = new JPanel();
-        SQLQueryUIComponents queryParts = new SQLQueryUIComponents(swRegistry, dsCollection, mapping, defaultQueryPanel);
+        SQLQueryUIComponents queryParts =
+                new SQLQueryUIComponents(swRegistry, dsCollection, mapping, new JPanel());
         queryParts.installSqlCompletionProvider(completionProvider);
         queryParts.addWindowListener(owner);
+        return queryParts.createPanel(db, initialSQL);
+    }
+
+    /**
+     * Lays this components collection out as a complete query panel. This is
+     * the instance counterpart of the static {@code createQueryPanel} factory,
+     * exposed so callers can keep the {@link SQLQueryUIComponents} reference
+     * (for example to add {@link TableChangeListener}s to the result grids).
+     *
+     * @param db
+     *            The data source that the initial query will be executed on,
+     *            or null for no initial query.
+     * @param initialSQL
+     *            The SQL to execute immediately, or null for none.
+     * @return the assembled query panel
+     */
+    public JComponent createPanel(SQLDatabase db, String initialSQL) {
+        JPanel defaultQueryPanel = (JPanel) dialogOwner;
         JToolBar toolbar = new JToolBar();
         toolbar.setFloatable(false);
-        toolbar.add(queryParts.getPrevQueryButton());
-        toolbar.add(queryParts.getNextQueryButton());
+        toolbar.add(getPrevQueryButton());
+        toolbar.add(getNextQueryButton());
         toolbar.addSeparator();
-        toolbar.add(queryParts.getExecuteButton());
-        toolbar.add(queryParts.getStopButton());
-        toolbar.add(queryParts.getClearButton());
+        toolbar.add(getExecuteButton());
+        toolbar.add(getStopButton());
+        toolbar.add(getClearButton());
         toolbar.addSeparator();
-        toolbar.add(queryParts.getAutoCommitToggleButton());
-        toolbar.add(queryParts.getCommitButton());
-        toolbar.add(queryParts.getRollbackButton());
+        toolbar.add(getAutoCommitToggleButton());
+        toolbar.add(getCommitButton());
+        toolbar.add(getRollbackButton());
         toolbar.addSeparator();
-        toolbar.add(queryParts.getUndoButton());
-        toolbar.add(queryParts.getRedoButton());
+        toolbar.add(getUndoButton());
+        toolbar.add(getRedoButton());
         
         FormLayout textAreaLayout = new FormLayout(
                 "pref:grow, 10dlu, pref, 10dlu, pref, 10dlu, pref"
@@ -1545,14 +1562,14 @@ public class SQLQueryUIComponents {
         textAreaBuilder.setDefaultDialogBorder();
         textAreaBuilder.append(toolbar, 7);
         textAreaBuilder.nextLine();
-        textAreaBuilder.append(queryParts.getDatabaseComboBox());
-        textAreaBuilder.append(queryParts.getDbcsManagerButton());
+        textAreaBuilder.append(getDatabaseComboBox());
+        textAreaBuilder.append(getDbcsManagerButton());
         textAreaBuilder.append(Messages.getString("SQLQuery.rowLimit"));
-        JSpinner rowlimitSpinner = queryParts.getRowLimitSpinner();
+        JSpinner rowlimitSpinner = getRowLimitSpinner();
         rowlimitSpinner.setValue(new Integer(1000));
         textAreaBuilder.append(rowlimitSpinner);
         textAreaBuilder.nextLine();
-        textAreaBuilder.append(new RTextScrollPane(queryParts.getQueryArea(), true), 7);
+        textAreaBuilder.append(new RTextScrollPane(getQueryArea(), true), 7);
         
         
         JSplitPane queryPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
@@ -1560,12 +1577,12 @@ public class SQLQueryUIComponents {
         queryPane.add(defaultQueryPanel, JSplitPane.TOP);
        
    
-        queryPane.add(queryParts.getResultTabPane(), JSplitPane.BOTTOM);
+        queryPane.add(getResultTabPane(), JSplitPane.BOTTOM);
         
         if (db != null && initialSQL != null && dsCollection.getConnections().contains(db.getDataSource())) {
-        	queryParts.getDatabaseComboBox().setSelectedItem(db.getDataSource());
-        	queryParts.getQueryArea().setText(initialSQL);
-        	queryParts.executeQuery(initialSQL);
+        	getDatabaseComboBox().setSelectedItem(db.getDataSource());
+        	getQueryArea().setText(initialSQL);
+        	executeQuery(initialSQL);
         }
         
         return queryPane;
