@@ -41,6 +41,7 @@ import javax.swing.Action;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JPopupMenu;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.TableModel;
 import javax.swing.text.Document;
 
@@ -100,6 +101,8 @@ public class FancyExportableJTable extends EditableJTable {
 			menu.add(exportHTMLAction);
 			
 			menu.add(exportCSVAction);
+
+			menu.add(exportJSONAction);
 			menu.pack();
 		}
 		
@@ -178,6 +181,40 @@ public class FancyExportableJTable extends EditableJTable {
                 } catch (FileNotFoundException ex) {
                     throw new RuntimeException("Could not open file " + file.getName(), ex);
                 } 
+            }
+        }
+    };
+
+    /**
+     * This action will export the table in its current state to JSON.
+     */
+    private final Action exportJSONAction = new AbstractAction("Export Selected to JSON..") {
+        public void actionPerformed(ActionEvent e) {
+            TableModelJSONFormatter jsonFormatter = new TableModelJSONFormatter();
+            for (Map.Entry<Integer, Format> entry : columnFormatters.entrySet()) {
+                jsonFormatter.setFormatter(entry.getKey(), entry.getValue());
+            }
+
+            JFileChooser chooser = new JFileChooser();
+            FileNameExtensionFilter jsonFilter = new FileNameExtensionFilter("JSON Files", "json");
+            chooser.addChoosableFileFilter(jsonFilter);
+            chooser.setFileFilter(jsonFilter);
+            int chooserResult = chooser.showSaveDialog(FancyExportableJTable.this);
+            if (chooserResult == JFileChooser.APPROVE_OPTION) {
+                File file = chooser.getSelectedFile();
+                if (!file.getName().toLowerCase().endsWith(".json")) {
+                    file = new File(file.getPath() + ".json");
+                }
+                try {
+                    PrintWriter writer = new PrintWriter(file);
+                    if (getSelectedRows().length != 0) {
+                        jsonFormatter.formatToStream(getModel(), writer, getSelectedRows());
+                    } else {
+                        jsonFormatter.formatToStream(getModel(), writer);
+                    }
+                } catch (FileNotFoundException ex) {
+                    throw new RuntimeException("Could not open file " + file.getName(), ex);
+                }
             }
         }
     };
@@ -271,9 +308,17 @@ public class FancyExportableJTable extends EditableJTable {
      * Returns the action that will export the table to CSV. This is
      * the same action that appears when right clicking on the table.
      */
-	public Action getExportCSVAction() {
+    public Action getExportCSVAction() {
 	    return exportCSVAction;
 	}
+
+    /**
+     * Returns the action that will export the table to JSON. This is
+     * the same action that appears when right clicking on the table.
+     */
+    public Action getExportJSONAction() {
+        return exportJSONAction;
+    }
 
     /**
      * Sets a formatter for the given column of a table model for exporting to
